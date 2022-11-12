@@ -1,0 +1,33 @@
+{
+  "name": "nova_restaurant",
+  "version": "1.0.0",
+  "description": "Random NoVa restaurant daily.",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anguyense/NoVa-restaurant-bot.git"
+  },
+  "keywords": [
+    "restaurant",
+    "food",
+    "bot",
+    "Twitter"
+  ],
+  "author": "Anh Nguyen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anguyense/NoVa-restaurant-bot/issues"
+  },
+  "homepage": "https://github.com/anguyense/NoVa-restaurant-bot#readme",
+  "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.16",
+    "all-the-cities": "^3.1.0",
+    "fs": "^0.0.1-security",
+    "geolib": "^3.3.3",
+    "node-fetch": "^2.6.7",
+    "twit": "^2.2.11"
+  }
+}
