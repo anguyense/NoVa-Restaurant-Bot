@@ -13,7 +13,8 @@ const noVa = ['Alexandria', 'Arlington', 'Fairfax', 'Fairfax Station', 'Falls Ch
 	      'Herndon', 'Annandale', 'Woodbridge', 'McLean', 'Vienna', 
 	      'Leesburg', 'Chantilly', 'Centreville', 'Tysons Corner', 'Woodburn', 
 	      'North Springfield', 'Springfield', 'West Springfield', 'Sterling', 'Potomac Mills', 
-	      'Great Falls', 'Ashburn', 'Oakton', 'Baileys Crossroads', 'Burke', 'Bull Run'];
+	      'Great Falls', 'Ashburn', 'Oakton', 'Baileys Crossroads', 'Burke', 
+          'Bull Run', 'Lorton', 'Fredericksburg'];
 
 const T = new Twit({
     consumer_key:         config.TWITTER_consumer_key,
@@ -58,6 +59,8 @@ function getPlace() {
 		resolve(place.loc.coordinates);
 	});
 }
+
+console.log(cities.filter((city) => (city.adminCode.match('VA') && city.name.match('Clifton'))));
 
 async function searchNearby(placeCoordinates) {
 	const nearPlaces = await fetch(
