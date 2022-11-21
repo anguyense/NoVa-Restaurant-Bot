@@ -3,10 +3,11 @@ console.log('The bot is starting.');
 var cities = require('all-the-cities');
 var fetch = require('node-fetch');
 var fs = require('fs');
-var Twit = require('twit');
+const Twit = require('twit');
+const Twitter = require('twitter');
 var geolib = require('geolib');
 var config = require('./config');
-var { placeDetails } = require('@googlemaps/google-maps-services-js');
+const { placeDetails } = require('@googlemaps/google-maps-services-js/dist/places/details');
 
 const noVa = ['Alexandria', 'Arlington', 'Fairfax', 'Fairfax Station', 'Falls Church', 
 	      'West Falls Church', 'Loudoun Valley Estates', 'Manassas', 'Manassas Park', 'Reston', 
@@ -15,6 +16,13 @@ const noVa = ['Alexandria', 'Arlington', 'Fairfax', 'Fairfax Station', 'Falls Ch
 	      'North Springfield', 'Springfield', 'West Springfield', 'Sterling', 'Potomac Mills', 
 	      'Great Falls', 'Ashburn', 'Oakton', 'Baileys Crossroads', 'Burke', 
           'Bull Run', 'Lorton', 'Fredericksburg'];
+
+const twitter = new Twitter({
+    consumer_key:         config.TWITTER_consumer_key,
+    consumer_secret:      config.TWITTER_consumer_secret,
+    access_token:         config.TWITTER_access_token,
+    access_token_secret:  config.TWITTER_access_token_secret,
+});
 
 const T = new Twit({
     consumer_key:         config.TWITTER_consumer_key,
@@ -30,6 +38,27 @@ function rand(array) {
     return array[i];
 }
 
+/* function tweetIt() {
+    var r = Math.floor(Math.random()*100);
+    
+    var tweet = {
+        status: 'Hello world! ' + r
+    }
+    
+    T.post('statuses/update', tweet, tweeted);
+    
+    function tweeted(err, data, response) {
+        if (err) {
+            console.log('Tweet went wrong!');
+            console.log(err);
+        } else {
+            console.log('Tweet worked!');
+        }
+    }
+}
+
+tweetIt(); */
+
 function getPlace() {
 	return new Promise(async (resolve, reject) => {
 		const places = cities.filter((city) => (city.adminCode.match('VA') && noVa.includes(city.name)));
@@ -41,7 +70,7 @@ function getPlace() {
 	});
 }
 
-console.log(cities.filter((city) => (city.adminCode.match('VA') && city.name.match('Clifton'))));
+//console.log(cities.filter((city) => (city.adminCode.match('VA') && city.name.match('Clifton'))));
 
 async function searchNearby(placeCoordinates) {
 	const nearPlaces = await fetch(
@@ -105,7 +134,7 @@ async function searchStreetImage(obj) {
 			`https://maps.googleapis.com/maps/api/streetview?size=640x640&return_error_codes=true&location=${obj.geometry.location.lat},${obj.geometry.location.lng}&key=${G_api}`
 		)
 			.then((result) => result.url)
-			.catch((err) => console.log('street error', err));
+			.catch((err) => console.log('street erro', err));
 
 		return {
 			imageUrl,
@@ -149,7 +178,7 @@ async function getDetailImages(obj) {
 		throw new Error('Not enough detail images');
 	}
 	const photos = obj.details_photos.slice(0, photosNeed);
-	const i = obj.imageUrl ? 2 : 1;
+	var i = obj.imageUrl ? 2 : 1;
 	for (const photo of photos) {
 		const response = await fetch(
 			`https://maps.googleapis.com/maps/api/place/photo?maxwidth=640&photoreference=${photo.photo_reference}&key=${G_api}`
@@ -191,25 +220,6 @@ function tweet(obj) {
 	});
 }
 
-function tweetIt() {
-    var r = Math.floor(Math.random()*100);
-    
-    var tweet = {
-        status: 'Hello world! ' + r
-    }
-    
-    T.post('statuses/update', tweet, tweeted);
-    
-    function tweeted(err, data, response) {
-        if (err) {
-            console.log('Tweet went wrong!');
-            console.log(err);
-        } else {
-            console.log('Tweet worked!');
-        }
-    }
-}
-
 async function composeBot() {
 	getPlace()
 		.then((r) => searchNearby(r))
@@ -219,11 +229,27 @@ async function composeBot() {
 		.then((r) => getStreetImage(r))
 		.then((r) => getDetailImages(r))
 		.then((r) => uploadTweetImages(r))
-		.then((r) => tweetIt(r))
+		.then((r) => tweet(r))
 		.then((r) => console.log('DONE', r))
 		.catch((e) => {
 			console.log('err', e.message);
+
+			e.stack
+			.split('\n')
+			.slice(1)
+			.map(r => r.match(/\((?<file>.*):(?<line>\d+):(?<pos>\d+)\)/))
+			.forEach(r => {
+				if (r && r.groups && r.groups.file.substr(0, 8) !== 'internal') 
+				{
+					const { file, line, pos } = r.groups
+					const f = fs.readFileSync(file, 'utf8').split('\n')
+					console.warn('  ', file, 'at', line + ':' + pos)
+					console.warn('    ', f[line - 1].trim())
+				}
+			})
 		});
 }
 
 composeBot();
+
+console.log('Done!');
